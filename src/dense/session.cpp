@@ -708,7 +708,11 @@ private:
             owned_.emplace_back(v);
             dev = (float*) v;
         }
-        if (cudaMemcpy(dev, host, bytes, cudaMemcpyHostToDevice) != cudaSuccess) { err = "the logit bias upload failed"; return false; }
+        if (cudaMemcpyAsync(dev, host, bytes, cudaMemcpyHostToDevice, st_.stream) != cudaSuccess ||
+            cudaStreamSynchronize(st_.stream) != cudaSuccess) {
+            err = "the logit bias upload failed";
+            return false;
+        }
         return true;
     }
 
